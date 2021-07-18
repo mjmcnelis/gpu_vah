@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 
+// cuda: no reason to change this
 
 double *** calloc_3d_array(double ***array, int dim1, int dim2, int dim3)
 {

@@ -13,9 +13,11 @@
 #include "../include/GhostCells.h"
 #include "../include/InitialConditions.h"
 #include "../include/KurganovTadmor.h"
-#include "../include/AdaptiveTimeStep.h"
+// #include "../include/AdaptiveTimeStep.h"
 #include "../include/FreezeoutFinder.h"
-#include "../include/OpenMP.h"
+// #include "../include/OpenMP.h"
+
+// cuda: modified on 7/18/21 (commented freezeout finder, adaptive time step)
 
 using namespace std;
 
@@ -23,7 +25,6 @@ bool hit_CFL_bound = false;
 bool after_output = false;
 precision dt_after_output;
 const precision dt_eps = 1.e-8;
-
 
 inline int linear_column_index(int i, int j, int k, int nx, int ny)
 {
@@ -89,7 +90,7 @@ long number_of_cells_above_freezeout_temperature(lattice_parameters lattice, hyd
 	return cells;
 }
 
-
+/*
 precision set_time_step(int n, precision t, precision dt_prev, precision t_next_output, lattice_parameters lattice, initial_condition_parameters initial, hydro_parameters hydro)
 {
 	precision dt_min = lattice.min_time_step;
@@ -150,10 +151,14 @@ precision set_time_step(int n, precision t, precision dt_prev, precision t_next_
 
 	return dt;
 }
-
+*/
 
 freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parameters initial, hydro_parameters hydro, int sample, std::vector<double> trento)
 {
+	// cuda: commented freezeout finder (temporary, focus on hydro output)
+	//       commented adaptive time step (temporary)
+	//       one todo is set up correct timers (probably need cudatime)
+
 	print_parameters(lattice, hydro);
 	allocate_memory(lattice);                                    // grid allocation
 
@@ -176,6 +181,7 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 
 	freezeout_finder finder(lattice, hydro);                     // initialize freezeout finder
 
+	/*
 	if(hydro.run_hydro == 2)
 	{
 		finder.load_initial_grid(t, q, e, u);
@@ -183,27 +189,28 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 
 	int grid_below_Tswitch = 0;                                  // number of times freezeout finder searches a grid below Tswitch
 	int freezeout_depth = 3;                                     // stop hydro evolution once grid_below_Tswitch = freezeout_depth
+	*/
 
 	int steps = 0;
 
-#ifdef _OPENMP
-  	double t1 = omp_get_wtime();
-#else
+	// cuda: todo is set up correct timers
   	clock_t start = clock();
-#endif
+
 	// fluid dynamic evolution
 	for(int n = 0; n < lattice.max_time_steps; n++)
 	{
-		dt = set_time_step(n, t, dt_prev, t_out + dt_out, lattice, initial, hydro);
+		// dt = set_time_step(n, t, dt_prev, t_out + dt_out, lattice, initial, hydro);
 
 		if(hydro.run_hydro == 1)                                    // output hydro evolution
 		{
+		/*
 		#ifdef FREEZEOUT_SLICE
 			output_freezeout_slice_x(t, lattice, hydro);        // output freezeout surface slices
 		#ifndef BOOST_INVARIANT
 			output_freezeout_slice_z(t, lattice, hydro);
 		#endif
 		#endif
+		*/
 			if(n == 0 || initial.initial_condition_type == 1)   // output first step (or every time step if Bjorken)
 			{
 				long cells_above_Tswitch = number_of_cells_above_freezeout_temperature(lattice, hydro);
@@ -227,6 +234,7 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 
 				if(all_cells_below_freezeout_temperature(lattice, hydro))
 				{
+				/*
 				#ifdef FREEZEOUT_SLICE
 					if(t > 17.0)                        // for freezeout slice plot only
 					{
@@ -234,12 +242,14 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 						break;
 					}
 				#endif
+				*/
 					break;                              // stop hydro evolution
 				}
 
 				t_out += dt_out;
 			}
 		}
+		/*
 		else if(hydro.run_hydro == 2)                               // construct particlization hypersurface
 		{
 			if(n == 0)
@@ -271,6 +281,7 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 				break;		// stop hydro evolution
 			}
 		}
+		*/
 
 		int update = 1;                                             // RK2 iteration:
 
@@ -294,12 +305,9 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 		exit(-1);
 	}
 
-#ifdef _OPENMP
-  	double t2 = omp_get_wtime();
-  	double duration = t2 - t1;
-#else
+	// cuda: todo is set up correct timers
   	double duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-#endif
+
 	print_run_time(t, duration, (double)steps, lattice, sample);        // output runtime benchmarks
 
 	free_memory();                                                      // deallocate grid

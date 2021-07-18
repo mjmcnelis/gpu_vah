@@ -9,6 +9,9 @@
 #include "../include/Macros.h"
 #include "../include/Parameters.h"
 
+// cuda: not sure if need to modify anything (leave this alone for now)
+// 		 I just need to pass parameter as a pointer (maybe iS3D main can help)
+
 
 double round_two_decimals(double number)
 {

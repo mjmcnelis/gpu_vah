@@ -20,7 +20,7 @@
 #include "../include/Viscosities.h"
 #include "../include/OpenMP.h"
 
-// cuda: modified on 7/18/21
+// cuda: modified on 7/18/21 (removed Bjorken and Gubser tests, fixed q,u variables)
 
 using namespace std;
 

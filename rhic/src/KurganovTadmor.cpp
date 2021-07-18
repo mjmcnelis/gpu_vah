@@ -6,12 +6,11 @@
 #include "../include/DynamicalVariables.h"
 #include "../include/AnisoVariables.h"
 #include "../include/GhostCells.h"
-#include "../include/FluxTerms.h"
+#include "../include/FluxTerms.cuh"
 #include "../include/SourceTerms.h"
-#include "../include/InferredVariables.h"
+#include "../include/InferredVariables.cuh"
 #include "../include/NeighborCells.h"
-#include "../include/Regulation.h"
-#include "../include/OpenMP.h"
+#include "../include/Regulation.cuh"
 
 inline int linear_column_index(int i, int j, int k, int nx, int ny)
 {

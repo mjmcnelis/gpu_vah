@@ -12,6 +12,11 @@
 #include "../include/OpenMP.h"
 using namespace std;
 
+
+// cuda: modified on 7/18/21 (slight changes)
+
+
+
 inline int linear_column_index(int i, int j, int k, int nx, int ny)
 {
 	return i  +  nx * (j  +  ny * k);
@@ -45,21 +50,17 @@ void print_hydro_mode(hydro_parameters hydro)
 
 void print_run_time(double t, double duration, double steps, lattice_parameters lattice, int sample)
 {
+	// cuda: removed omp threads 
+
 	int nx = lattice.lattice_points_x;
 	int ny = lattice.lattice_points_y;
 	int nz = lattice.lattice_points_eta;
-
-    int threads = 1;
-#ifdef _OPENMP
-    threads = omp_get_max_threads();
-#endif
 
 	printf("\nLifetime               = %.5g fm/c\n", t);
 	printf("Run time               = %.4g s\n", duration);
 	printf("Number of time steps   = %d\n", (int)steps);
 	printf("Average time/step      = %.4g s\n", duration / steps);
 	printf("Average time/cell/step = %.4g ms\n", 1000. * duration / (nx * ny * nz * steps));
-    printf("Number of threads      = %d\n", threads);
 
 #ifdef BENCHMARKS
 	FILE * benchmarks;
@@ -75,13 +76,15 @@ void print_run_time(double t, double duration, double steps, lattice_parameters 
 		benchmarks = fopen(fname, "a");
 	}
 
-	fprintf(benchmarks, "%.5g\t%.5g\t%d\t%.5g\t%.5g\t%d\n", t, duration, (int)steps, duration / steps, 1000. * duration / (nx * ny * nz * steps), threads);
+	fprintf(benchmarks, "%.5g\t%.5g\t%d\t%.5g\t%.5g\n", t, duration, (int)steps, duration / steps, 1000. * duration / (nx * ny * nz * steps));
 	fclose(benchmarks);
 #endif
 }
 
 hydro_max compute_hydro_max(const precision * const __restrict__ e, const fluid_velocity * const __restrict__ u, precision t, lattice_parameters lattice, hydro_parameters hydro)
 {
+	// cuda: changed u[s].ux to u->ux[s], etc
+
 	int nx = lattice.lattice_points_x;
 	int ny = lattice.lattice_points_y;
 	int nz = lattice.lattice_points_eta;
@@ -98,10 +101,10 @@ hydro_max compute_hydro_max(const precision * const __restrict__ e, const fluid_
 			{
 				int s = linear_column_index(i, j, k, nx + 4, ny + 4);
 
-				precision ux = u[s].ux;
-				precision uy = u[s].uy;
+				precision ux = u->ux[s];
+				precision uy = u->uy[s];
 			#ifndef BOOST_INVARIANT
-				precision un = u[s].un;
+				precision un = u->un[s];
 			#else
 				precision un = 0;
 			#endif
@@ -168,6 +171,8 @@ int compute_total_regulations(const int * const __restrict__ regulation, lattice
 
 void print_hydro_center(int n, double t, lattice_parameters lattice, hydro_parameters hydro, long cells_above_Tswitch)
 {
+	// cuda: changed q[s].pl to q->pl[s], etc
+
 	int s = central_index(lattice);
 
 	if(n == 0)
@@ -199,8 +204,8 @@ void print_hydro_center(int n, double t, lattice_parameters lattice, hydro_param
 
 	precision percent_above_Tsw = 100. * (double)cells_above_Tswitch / (double)(nx * ny * nz);
 #ifdef ANISO_HYDRO
-	precision pl = q[s].pl * hbarc;
-	precision pt = q[s].pt * hbarc;
+	precision pl = q->pl[s] * hbarc;
+	precision pt = q->pt[s] * hbarc;
 
 	// T = GeV
 	// e, pl, pt = GeV/fm^3
