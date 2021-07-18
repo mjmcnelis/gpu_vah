@@ -4,6 +4,9 @@
 
 #include "Precision.h"
 
+// cuda: modified on 7/18/21
+//       made flux functions device
+
 // precision approximate_derivative(precision qm, precision q, precision qp);
 
 __device__

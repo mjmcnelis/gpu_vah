@@ -18,30 +18,33 @@
 #include <cstring>
 #include "HydroWrapper.h"
 
-void print_cpu()
-{
-    char CPUBrandString[0x40];
-    unsigned int CPUInfo[4] = {0,0,0,0};
+// cuda: modified on 7/18/21 (temp commented print_cpu)
 
-    __cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-    unsigned int nExIds = CPUInfo[0];
 
-    memset(CPUBrandString, 0, sizeof(CPUBrandString));
+// void print_cpu()
+// {
+//     char CPUBrandString[0x40];
+//     unsigned int CPUInfo[4] = {0,0,0,0};
 
-    for (unsigned int i = 0x80000000; i <= nExIds; ++i)
-    {
-        __cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+//     __cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+//     unsigned int nExIds = CPUInfo[0];
 
-        if (i == 0x80000002)
-            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
-        else if (i == 0x80000003)
-            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
-        else if (i == 0x80000004)
-            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
-    }
+//     memset(CPUBrandString, 0, sizeof(CPUBrandString));
 
-    std::cout << "\nCPU Type: " << CPUBrandString << "\n" << std::endl;
-}
+//     for (unsigned int i = 0x80000000; i <= nExIds; ++i)
+//     {
+//         __cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+
+//         if (i == 0x80000002)
+//             memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+//         else if (i == 0x80000003)
+//             memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+//         else if (i == 0x80000004)
+//             memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+//     }
+
+//     std::cout << "\nCPU Type: " << CPUBrandString << "\n" << std::endl;
+// }
 
 
 int main(int argc, char **argv)
@@ -49,7 +52,7 @@ int main(int argc, char **argv)
   // default: cpu_vah can run as a stand-alone program
   // wrapper: HYDRO class can be instantiated in a larger program (JETSCAPE)
 
-  print_cpu();
+  // print_cpu();
 
   HYDRO vah;
 

@@ -13,9 +13,12 @@
 #include "../include/GhostCells.h"
 #include "../include/InitialConditions.h"
 #include "../include/KurganovTadmor.h"
-// #include "../include/AdaptiveTimeStep.h"
-#include "../include/FreezeoutFinder.h"
-// #include "../include/OpenMP.h"
+
+// cuda: temp
+// #include "../include/AdaptiveTimeStep.h"		// temp
+// #include "../include/FreezeoutFinder.h"		// temp
+#include "../include/FreezeoutSurface.h"		
+
 
 // cuda: modified on 7/18/21 (commented freezeout finder, adaptive time step)
 
@@ -179,9 +182,12 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 	precision dt_out = lattice.output_interval;
   	int number_outputs = 0;
 
-	freezeout_finder finder(lattice, hydro);                     // initialize freezeout finder
+	// cuda: temp empty surface
+	freezeout_surface surface;
 
 	/*
+	freezeout_finder finder(lattice, hydro);                     // initialize freezeout finder
+
 	if(hydro.run_hydro == 2)
 	{
 		finder.load_initial_grid(t, q, e, u);
@@ -319,7 +325,9 @@ freezeout_surface run_hydro(lattice_parameters lattice, initial_condition_parame
 
 	printf("\nFinished hydro evolution\n");
 
-	return finder.surface;
+	// cuda: temp
+	// return finder.surface;
+	return surface;
 }
 
 
