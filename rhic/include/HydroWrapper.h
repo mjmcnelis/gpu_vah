@@ -9,7 +9,7 @@
 class HYDRO
 {
     // this is a C++ wrapper for OSU hydro codes (cpu-vh, gpu-vh, cpu_vah, BEShydro, etc)
-    // originally written by Derek Everett 2018
+    // original version written by Derek Everett 2018
 
     private:
 

@@ -3,7 +3,7 @@
 
 // simulation mode
 // #define ANISO_HYDRO                        // run anisotropic hydro (comment to run 2nd order viscous hydro)
-#define BOOST_INVARIANT                    // run 2+1d hydro (comment to run 3+1d hydro)
+// #define BOOST_INVARIANT                    // run 2+1d hydro (comment to run 3+1d hydro)
 //#define JETSCAPE                         // store freezeout surface in HYDRO wrapper (comment to write freezeout surface to file)
                                            // todo: in case of fatal error (e.g. nan), return empty surface in run_hydro() w/o exiting program
                                            // places program can crash: initial conditions (read in incorrectly)

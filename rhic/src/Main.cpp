@@ -43,6 +43,7 @@ void print_cpu()
     std::cout << "\nCPU Type: " << CPUBrandString << "\n" << std::endl;
 }
 
+
 int main(int argc, char **argv)
 {
   // default: cpu_vah can run as a stand-alone program

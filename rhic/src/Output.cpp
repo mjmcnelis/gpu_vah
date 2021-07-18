@@ -9,18 +9,21 @@
 #include "../include/Projections.h"
 #include "../include/NeighborCells.h"
 #include "../include/Hydrodynamics.h"
-#include "../include/AnisoBjorken.h"
-#include "../include/ViscousBjorken.h"
-#include "../include/AnisoGubser.h"
-#include "../include/ViscousGubser.h"
+// #include "../include/AnisoBjorken.h"
+// #include "../include/ViscousBjorken.h"
+// #include "../include/AnisoGubser.h"
+// #include "../include/ViscousGubser.h"
 #include "../include/Viscosities.h"
+
+// cuda: modified on 7/18/21 (commented everything not related to 3+1d Trento test)
+
 
 inline int linear_column_index(int i, int j, int k, int nx, int ny)
 {
 	return i  +  nx * (j  +  ny * k);
 }
 
-
+/*
 int central_index(lattice_parameters lattice)
 {
 	int nx = lattice.lattice_points_x;
@@ -38,13 +41,16 @@ int central_index(lattice_parameters lattice)
 
 	return linear_column_index(i, j, k, ncx, ncy);
 }
+*/
 
+/*
 inline precision central_derivative(const precision * const __restrict__ f, int n, precision dx)
 {
 	return (f[n + 1] - f[n]) / (2. * dx);		// f[n] = fm  |	 f[n+1] = fp
 }
+*/
 
-
+/*
 void output_mean_field(const hydro_variables * const __restrict__ q, const fluid_velocity * const __restrict__ u, const fluid_velocity  * const __restrict__ up, const precision * const e, double t, double dt_prev, lattice_parameters lattice, hydro_parameters hydro)
 {
 #ifdef LATTICE_QCD
@@ -225,7 +231,7 @@ void output_mean_field(const hydro_variables * const __restrict__ q, const fluid
 	fclose(db2_peq);
 #endif
 }
-
+*/
 
 void output_residual_transverse_shear_validity(const hydro_variables * const __restrict__ q, const fluid_velocity * const __restrict__ u, const precision * const e, double t, lattice_parameters lattice, hydro_parameters hydro)
 {
@@ -264,45 +270,45 @@ void output_residual_transverse_shear_validity(const hydro_variables * const __r
 
 				precision e_s = e[s];
 
-				precision pitt = q[s].pitt;			// get shear stress
-				precision pitx = q[s].pitx;
-				precision pity = q[s].pity;
+				precision pitt = q->pitt[s];			// get shear stress
+				precision pitx = q->pitx[s];
+				precision pity = q->pity[s];
 				precision pitn = 0;
-				precision pixx = q[s].pixx;
-				precision pixy = q[s].pixy;
+				precision pixx = q->pixx[s];
+				precision pixy = q->pixy[s];
 				precision pixn = 0;
-				precision piyy = q[s].piyy;
+				precision piyy = q->piyy[s];
 				precision piyn = 0;
 				precision pinn = 0;
 
 			#ifndef BOOST_INVARIANT
-				pitn = q[s].pitn;
-				pixn = q[s].pixn;
-				piyn = q[s].piyn;
-				pinn = q[s].pinn;
+				pitn = q->pitn[s];
+				pixn = q->pixn[s];
+				piyn = q->piyn[s];
+				pinn = q->pinn[s];
 			#else
 			#ifndef ANISO_HYDRO
-				pinn = q[s].pinn;
+				pinn = q->pinn[s];
 			#endif
 			#endif
 
 			#ifdef ANISO_HYDRO						// get transverse pressure
-				precision pt = q[s].pt;
+				precision pt = q->pt[s];
 			#else 									// get transverse pressure and double-transverse project viscous hydro shear stress
 
 				equation_of_state_new eos(e_s, hydro.conformal_eos_prefactor);
 				precision P = eos.equilibrium_pressure();
 
 			#ifdef PI
-				P += q[s].Pi;
+				P += q->Pi[s];
 			#endif
 
-				precision ux = u[s].ux;
-				precision uy = u[s].uy;
+				precision ux = u->ux[s];
+				precision uy = u->uy[s];
 				precision un = 0;
 
 			#ifndef BOOST_INVARIANT
-				un = u[s].un;
+				un = u->un[s];
 			#endif
 				precision ut = sqrt(1.  +  ux * ux  +  uy * uy  +  t2 * un * un);
 				precision utperp = sqrt(1.  +  ux * ux  +  uy * uy);
@@ -378,13 +384,13 @@ void output_residual_longitudinal_shear_validity(const hydro_variables * const _
 				int s = linear_column_index(i, j, k, nx + 4, ny + 4);
 
 			#ifdef ANISO_HYDRO
-				precision pl = q[s].pl;
-				precision pt = q[s].pt;
+				precision pl = q->pl[s];
+				precision pt = q->pt[s];
 			#ifdef WTZMU
-				precision WtTz = q[s].WtTz;
-				precision WxTz = q[s].WxTz;
-				precision WyTz = q[s].WyTz;
-				precision WnTz = q[s].WnTz;
+				precision WtTz = q->WtTz[s];
+				precision WxTz = q->WxTz[s];
+				precision WyTz = q->WyTz[s];
+				precision WnTz = q->WnTz[s];
 			#else
 				precision WtTz = 0;
 				precision WxTz = 0;
@@ -399,14 +405,14 @@ void output_residual_longitudinal_shear_validity(const hydro_variables * const _
 				precision P = eos.equilibrium_pressure();
 
 			#ifdef PI
-				P += q[s].Pi;
+				P += q->Pi[s];
 			#endif
 
-				precision ux = u[s].ux;
-				precision uy = u[s].uy;
+				precision ux = u->ux[s];
+				precision uy = u->uy[s];
 				precision un = 0;
 			#ifndef BOOST_INVARIANT
-				un = u[s].un;
+				un = u->un[s];
 			#endif
 
 				precision ut = sqrt(1.  +  ux * ux  +  uy * uy  +  t2 * un * un);
@@ -415,20 +421,20 @@ void output_residual_longitudinal_shear_validity(const hydro_variables * const _
 				precision zn = ut / t / utperp;
 
 			#ifdef PIMUNU
-				precision pitt = q[s].pitt;
-				precision pitx = q[s].pitx;
-				precision pity = q[s].pity;
+				precision pitt = q->pitt[s];
+				precision pitx = q->pitx[s];
+				precision pity = q->pity[s];
 				precision pitn = 0;
-				precision pixx = q[s].pixx;
-				precision pixy = q[s].pixy;
+				precision pixx = q->pixx[s];
+				precision pixy = q->pixy[s];
 				precision pixn = 0;
-				precision piyy = q[s].piyy;
+				precision piyy = q->piyy[s];
 				precision piyn = 0;
-				precision pinn = q[s].pinn;
+				precision pinn = q->pinn[s];
 			#ifndef BOOST_INVARIANT
-				pitn = q[s].pitn;
-				pixn = q[s].pixn;
-				piyn = q[s].piyn;
+				pitn = q->pitn[s];
+				pixn = q->pixn[s];
+				piyn = q->piyn[s];
 			#endif
 			#else
 				precision pitt = 0;
@@ -484,7 +490,7 @@ void output_residual_longitudinal_shear_validity(const hydro_variables * const _
 	fclose(WTz_pl_2pt);
 }
 
-
+/*
 void output_viscous_bjorken(const hydro_variables * const __restrict__ q, const precision * const e, precision e0, precision t, lattice_parameters lattice, hydro_parameters hydro)
 {
 #ifndef ANISO_HYDRO
@@ -546,8 +552,9 @@ void output_viscous_bjorken(const hydro_variables * const __restrict__ q, const 
 
 #endif
 }
+*/
 
-
+/*
 void output_aniso_bjorken(const hydro_variables * const __restrict__ q, const precision * const e, double e0, double t, lattice_parameters lattice, hydro_parameters hydro)
 {
 #ifdef ANISO_HYDRO
@@ -601,8 +608,9 @@ void output_aniso_bjorken(const hydro_variables * const __restrict__ q, const pr
 
 #endif
 }
+*/
 
-
+/*
 void output_gubser(const hydro_variables * const __restrict__ q, const fluid_velocity  * const __restrict__ u, const precision * const e, double t, lattice_parameters lattice)
 {
 	int nx = lattice.lattice_points_x;
@@ -702,7 +710,7 @@ void output_gubser(const hydro_variables * const __restrict__ q, const fluid_vel
 	fclose(uxplot);
 	fclose(urplot);
 }
-
+*/
 
 void output_hydro(const hydro_variables * const __restrict__ q, const fluid_velocity  * const __restrict__ u, const precision * const e, double t, lattice_parameters lattice, hydro_parameters hydro)
 {
@@ -787,12 +795,12 @@ void output_hydro(const hydro_variables * const __restrict__ q, const fluid_velo
 
 				int s = linear_column_index(i, j, k, nx + 4, ny + 4);
 
-				precision ux = u[s].ux;
-				precision uy = u[s].uy;
+				precision ux = u->ux[s];
+				precision uy = u->uy[s];
 				precision e_s = e[s];
 
 			#ifndef BOOST_INVARIANT
-				precision un = u[s].un;
+				precision un = u->un[s];
 			#else
 				precision un = 0;
 			#endif
@@ -803,28 +811,28 @@ void output_hydro(const hydro_variables * const __restrict__ q, const fluid_velo
 				precision p = eos.equilibrium_pressure();
 
 			#ifdef ANISO_HYDRO
-				precision pl = q[s].pl;
-				precision pt = q[s].pt;
+				precision pl = q->pl[s];
+				precision pt = q->pt[s];
 			#else
 				precision utperp = sqrt(1.  +  ux * ux  +  uy * uy);
 				precision zt = t * un / utperp;
 				precision zn = ut / t / utperp;
 
 			#ifdef PIMUNU
-				precision pitt = q[s].pitt;
+				precision pitt = q->pitt[s];
 			#ifndef BOOST_INVARIANT
-				precision pitn = q[s].pitn;
+				precision pitn = q->pitn[s];
 			#else
 				precision pitn = 0;
 			#endif
-				precision pinn = q[s].pinn;
+				precision pinn = q->pinn[s];
 			#else
 				precision pitt = 0;
 				precision pitn = 0;
 				precision pinn = 0;
 			#endif
 			#ifdef PI
-				precision Pi = q[s].Pi;
+				precision Pi = q->Pi[s];
 			#else
 				precision Pi = 0;
 			#endif
@@ -843,9 +851,6 @@ void output_hydro(const hydro_variables * const __restrict__ q, const fluid_velo
 			#ifndef CONFORMAL_EOS
 				fprintf(shear,	 	"%.2f\t%.2f\t%.2f\t%.4e\n", x, y, z, 2. * (pl - pt) / (3. * p));
 				fprintf(bulk,	 	"%.2f\t%.2f\t%.2f\t%.4e\n", x, y, z, (pl + 2.*pt) / (3. * p)  -  1.);
-			#endif
-			#ifdef E_CHECK
-				fprintf(energy_check, "%.2f\t%.2f\t%.2f\t%.4e\n", x, y, z, q[s].e_check * hbarc);
 			#endif
 			}
 		}
@@ -940,7 +945,7 @@ void output_freezeout_slice_x(double t, lattice_parameters lattice, hydro_parame
 		precision p = eos.equilibrium_pressure();
 
     #ifdef B_FIELD
-    	precision b = q[s].b;
+    	precision b = q->b[s];
     	precision beq = eos.equilibrium_mean_field();
     	precision db =  b - beq;
     #endif
@@ -957,25 +962,25 @@ void output_freezeout_slice_x(double t, lattice_parameters lattice, hydro_parame
 		precision pinn = 0;
 
 	#ifdef PIMUNU
-		pitt = q[s].pitt;
-		pitx = q[s].pitx;
-		pity = q[s].pity;
+		pitt = q->pitt[s];
+		pitx = q->pitx[s];
+		pity = q->pity[s];
 		pitn = 0;
-		pixx = q[s].pixx;
-		pixy = q[s].pixy;
+		pixx = q->pixx[s];
+		pixy = q->pixy[s];
 		pixn = 0;
-		piyy = q[s].piyy;
+		piyy = q->piyy[s];
 		piyn = 0;
 		pinn = 0;
 
 	#ifndef BOOST_INVARIANT
-		pitn = q[s].pitn;
-		pixn = q[s].pixn;
-		piyn = q[s].piyn;
-		pinn = q[s].pinn;
+		pitn = q->pitn[s];
+		pixn = q->pixn[s];
+		piyn = q->piyn[s];
+		pinn = q->pinn[s];
 	#else
 	#ifndef ANISO_HYDRO
-		pinn = q[s].pinn;
+		pinn = q->pinn[s];
 	#endif
 	#endif
 	#endif
@@ -986,10 +991,10 @@ void output_freezeout_slice_x(double t, lattice_parameters lattice, hydro_parame
 		precision WnTz = 0;
 
 	#ifdef WTZMU
-		WtTz = q[s].WtTz;
-		WxTz = q[s].WxTz;
-		WyTz = q[s].WyTz;
-		WnTz = q[s].WnTz;
+		WtTz = q->WtTz[s];
+		WxTz = q->WxTz[s];
+		WyTz = q->WyTz[s];
+		WnTz = q->WnTz[s];
 	#endif
 
 	#ifdef ANISO_HYDRO
@@ -1000,8 +1005,8 @@ void output_freezeout_slice_x(double t, lattice_parameters lattice, hydro_parame
 
 
 	#ifdef ANISO_HYDRO			// aniso hydro slice:
-		double pl = q[s].pl;
-		double pt = q[s].pt;
+		double pl = q->pl[s];
+		double pt = q->pt[s];
 
 		// sqrt((piT.piT-2.WTz.WTz)/(pl.pl+2.pt.pt))
 		fprintf(Rinv_pi_x, "%.3f\t%.4e\t%.4e\n", x, t, pi_mag / sqrt(pl*pl + 2.*pt*pt));
@@ -1024,7 +1029,7 @@ void output_freezeout_slice_x(double t, lattice_parameters lattice, hydro_parame
 
 	#ifdef PI
 		// |Pi| / p
-		fprintf(Rinv_bulk_x, "%.3f\t%.4e\t%.4e\n", x, t, fabs(q[s].Pi) / p);
+		fprintf(Rinv_bulk_x, "%.3f\t%.4e\t%.4e\n", x, t, fabs(q->Pi[s]) / p);
 	#endif
 
 	#endif
@@ -1118,7 +1123,7 @@ void output_freezeout_slice_z(double t, lattice_parameters lattice, hydro_parame
 		precision p = eos.equilibrium_pressure();
 
     #ifdef B_FIELD
-    	precision b = q[s].b;
+    	precision b = q->b[s];
     	precision beq = eos.equilibrium_mean_field();
     	precision db =  b - beq;
     #endif
@@ -1135,21 +1140,21 @@ void output_freezeout_slice_z(double t, lattice_parameters lattice, hydro_parame
 		precision pinn = 0;
 
 	#ifdef PIMUNU
-		pitt = q[s].pitt;
-		pitx = q[s].pitx;
-		pity = q[s].pity;
-		pixx = q[s].pixx;
-		pixy = q[s].pixy;
-		piyy = q[s].piyy;
+		pitt = q->pitt[s];
+		pitx = q->pitx[s];
+		pity = q->pity[s];
+		pixx = q->pixx[s];
+		pixy = q->pixy[s];
+		piyy = q->piyy[s];
 
 	#ifndef BOOST_INVARIANT
-		pitn = q[s].pitn;
-		pixn = q[s].pixn;
-		piyn = q[s].piyn;
-		pinn = q[s].pinn;
+		pitn = q->pitn[s];
+		pixn = q->pixn[s];
+		piyn = q->piyn[s];
+		pinn = q->pinn[s];
 	#else
 	#ifndef ANISO_HYDRO
-		pinn = q[s].pinn;
+		pinn = q->pinn[s];
 	#endif
 	#endif
 	#endif
@@ -1177,7 +1182,7 @@ void output_freezeout_slice_z(double t, lattice_parameters lattice, hydro_parame
 
 	#ifdef PI
 		// |Pi| / p
-		fprintf(Rinv_bulk_z, "%.3f\t%.4e\t%.4e\n", z, t, fabs(q[s].Pi) / p);
+		fprintf(Rinv_bulk_z, "%.3f\t%.4e\t%.4e\n", z, t, fabs(q->Pi[s]) / p);
 	#endif
 
 	#endif
@@ -1212,18 +1217,18 @@ void output_freezeout_slice_z(double t, lattice_parameters lattice, hydro_parame
 		precision pinn = 0;
 
 	#ifdef PIMUNU
-		pitt = q[s].pitt;
-		pitx = q[s].pitx;
-		pity = q[s].pity;
-		pixx = q[s].pixx;
-		pixy = q[s].pixy;
-		piyy = q[s].piyy;
+		pitt = q->pitt[s];
+		pitx = q->pitx[s];
+		pity = q->pity[s];
+		pixx = q->pixx[s];
+		pixy = q->pixy[s];
+		piyy = q->piyy[s];
 
 	#ifndef BOOST_INVARIANT
-		pitn = q[s].pitn;
-		pixn = q[s].pixn;
-		piyn = q[s].piyn;
-		pinn = q[s].pinn;
+		pitn = q->pitn[s];
+		pixn = q->pixn[s];
+		piyn = q->piyn[s];
+		pinn = q->pinn[s];
 	#endif
 	#endif
 
@@ -1233,16 +1238,16 @@ void output_freezeout_slice_z(double t, lattice_parameters lattice, hydro_parame
 		precision WnTz = 0;
 
 	#ifdef WTZMU
-		WtTz = q[s].WtTz;
-		WxTz = q[s].WxTz;
-		WyTz = q[s].WyTz;
-		WnTz = q[s].WnTz;
+		WtTz = q->WtTz[s];
+		WxTz = q->WxTz[s];
+		WyTz = q->WyTz[s];
+		WnTz = q->WnTz[s];
 	#endif
 
 		precision pi_mag = sqrt(fabs(-2. * (WtTz * WtTz  -  WxTz * WxTz  -  WyTz * WyTz  -  t2 * WnTz * WnTz)  +  pitt * pitt  +  pixx * pixx  +  piyy * piyy  +  t4 * pinn * pinn  -  2. * (pitx * pitx  +  pity * pity  -  pixy * pixy  +  t2 * (pitn * pitn  -  pixn * pixn  -  piyn * piyn))));
 
-		precision pl = q[s].pl;
-		precision pt = q[s].pt;
+		precision pl = q->pl[s];
+		precision pt = q->pt[s];
 
 		// sqrt((piT.piT-2.WTz.WTz)/(pl.pl+2.pt.pt))
 		fprintf(Rinv_pi_z, "%.3f\t%.4e\t%.4e\n", z, t, pi_mag / sqrt(pl*pl + 2.*pt*pt));
@@ -1257,7 +1262,7 @@ void output_freezeout_slice_z(double t, lattice_parameters lattice, hydro_parame
 	fclose(reg_dB_z);
 }
 
-
+/*
 void output_Tmunu_violations(const float * const __restrict__ Tmunu_violations, double t, lattice_parameters lattice)
 {
 #ifdef MONITOR_TTAUMU
@@ -1298,8 +1303,9 @@ void output_Tmunu_violations(const float * const __restrict__ Tmunu_violations, 
 	fclose(violations);
 #endif
 }
+*/
 
-
+/*
 void output_plpt_regulations(const int * const __restrict__ plpt_regulation, double t, lattice_parameters lattice)
 {
 #ifdef MONITOR_PLPT
@@ -1340,8 +1346,9 @@ void output_plpt_regulations(const int * const __restrict__ plpt_regulation, dou
 	fclose(regulation);
 #endif
 }
+*/
 
-
+/*
 void output_b_regulations(const int * const __restrict__ b_regulation, double t, lattice_parameters lattice)
 {
 #ifdef MONITOR_B
@@ -1382,8 +1389,9 @@ void output_b_regulations(const int * const __restrict__ b_regulation, double t,
 	fclose(regulation);
 #endif
 }
+*/
 
-
+/*
 void output_viscous_regulations(const int * const __restrict__ viscous_regulation, double t, lattice_parameters lattice)
 {
 #ifdef MONITOR_REGULATIONS
@@ -1425,34 +1433,30 @@ void output_viscous_regulations(const int * const __restrict__ viscous_regulatio
 	fclose(reg_file);
 #endif
 }
-
+*/
 
 void output_hydro_simulation(double t, double dt_prev, lattice_parameters lattice, initial_condition_parameters initial, hydro_parameters hydro)
 {
+	// cuda: removed Bjorken and Gubser output
+	//		 commented everything else except output_hydro and validity for now
+
 	int initial_condition_type = initial.initial_condition_type;
 
 	if(initial_condition_type == 1)
 	{
-		precision T0 = initial.initialCentralTemperatureGeV;
-		precision e0 = equilibrium_energy_density_new(T0 / hbarc, hydro.conformal_eos_prefactor);
-
-	#ifdef ANISO_HYDRO
-		output_aniso_bjorken(q, e, e0, t, lattice, hydro);
-	#else
-		output_viscous_bjorken(q, e, e0, t, lattice, hydro);
-	#endif
+		printf("Removed Bjorken output\n")
 	}
 	else if(initial_condition_type == 2)
 	{
-		output_gubser(q, u, e, t, lattice);
-		output_residual_transverse_shear_validity(q, u, e, t, lattice, hydro);
+		printf("Removed Gubser output\n")
 	}
 	else
 	{
 		output_hydro(q, u, e, t, lattice, hydro);
+
 		output_residual_transverse_shear_validity(q, u, e, t, lattice, hydro);
 		output_residual_longitudinal_shear_validity(q, u, e, t, lattice, hydro);
-
+	/*
 	#ifdef LATTICE_QCD
 		output_mean_field(q, u, up, e, t, dt_prev, lattice, hydro);
 	#endif
@@ -1472,6 +1476,7 @@ void output_hydro_simulation(double t, double dt_prev, lattice_parameters lattic
 	#ifdef MONITOR_REGULATIONS
 		output_viscous_regulations(viscous_regulation, t, lattice);
 	#endif
+	*/
 	}
 }
 

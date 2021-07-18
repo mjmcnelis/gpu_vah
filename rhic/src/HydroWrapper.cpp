@@ -11,9 +11,11 @@
 
 using namespace std;
 
-// this is a C++ wrapper for OSU hydro codes (cpu-vh, gpu-vh, cpu_vah, etc)
-// originally written by Derek Everett 2018
+// cuda: modified on 7/18/21 (removed _OPENMP macro statements, left store_freezeout_surface alone b/c I think it should be host)
+// 		 one todo is change parameter variables to pointers
 
+// this is a C++ wrapper for OSU hydro codes (cpu-vh, gpu-vh, cpu_vah, etc)
+// original version was written by Derek Everett 2018
 
 HYDRO::HYDRO()
 {
@@ -23,12 +25,10 @@ HYDRO::HYDRO()
 }
 
 
-
 HYDRO::~HYDRO()
 {
 
 }
-
 
 
 void HYDRO::read_trento_energy_density_profile_from_memory(std::vector<double> trento_energy)
@@ -38,7 +38,6 @@ void HYDRO::read_trento_energy_density_profile_from_memory(std::vector<double> t
 
 	trento_energy_density_profile = trento_energy;
 }
-
 
 
 void HYDRO::store_freezeout_surface(freezeout_surface surface)
@@ -113,7 +112,6 @@ void HYDRO::store_freezeout_surface(freezeout_surface surface)
 }
 
 
-
 void HYDRO::free_freezeout_surface()
 {
 	printf("\nFreeing freezeout surface in hydro module...\n\n");
@@ -146,12 +144,10 @@ void HYDRO::free_freezeout_surface()
 }
 
 
-
 void HYDRO::start_hydro(int argc, char **argv)
 {
-#ifdef _OPENMP
-	printf("Running CPU-VAH with OpenMP acceleration: number of threads = %d\n\n", omp_get_max_threads());
-#endif
+	// cuda: removed OpenMP macro statement
+	// cuda: might change parameter variables to pointers
 
 	bool sample_parameters = false;     // default: use model parameters in parameters/
 	int sample = 0;
@@ -203,12 +199,10 @@ void HYDRO::start_hydro(int argc, char **argv)
 }
 
 
-
 void HYDRO::start_hydro_no_arguments()
 {
-#ifdef _OPENMP
-	printf("Running CPU-VAH with OpenMP acceleration: number of threads = %d\n\n", omp_get_max_threads());
-#endif
+	// cuda: removed OpenMP macro statement
+	// cuda: might change parameter variables to pointers
 
 	bool sample_parameters = false;     // will read default parameters in parameters/
 	int sample = 0;                     // can't use auto_grid (need different way to read in sample model parameters)

@@ -12,6 +12,8 @@
 #include <gsl/gsl_interp.h>
 #include "../include/OpenMP.h"
 
+// cuda: modified on 7/18/21 (slight modifications)
+
 using namespace std;
 
 
@@ -241,6 +243,8 @@ void wounded_nucleons(int A, int B, vector<double> * xA_wounded, vector<double> 
 
 void trento_transverse_energy_density_profile(double * const __restrict__ energy_density_transverse, lattice_parameters lattice, initial_condition_parameters initial, hydro_parameters hydro)
 {
+	// cuda: commented omp pragma
+
 	// set seed and initialize sampler
 
 	long unsigned seed = chrono::system_clock::now().time_since_epoch().count();
@@ -323,7 +327,7 @@ void trento_transverse_energy_density_profile(double * const __restrict__ energy
 			}
 		}
 
-		#pragma omp parallel for collapse(2)
+		// #pragma omp parallel for collapse(2)
 		for(int j = 0; j < ny; j++)									// compute the transverse energy density profile
 		{
 	   		for(int i = 0; i < nx; i++)
@@ -405,6 +409,8 @@ void longitudinal_energy_density_extension(double * const __restrict__ eL, latti
 
 void set_trento_energy_density_and_flow_profile(lattice_parameters lattice, initial_condition_parameters initial, hydro_parameters hydro)
 {
+	// cuda: changed u[s].ux to u->ux[s] and up[s].ux to up->ux[s], etc
+
 	precision e_min = hydro.energy_min;
 	precision t0 = hydro.tau_initial;
 
@@ -461,16 +467,16 @@ void set_trento_energy_density_and_flow_profile(lattice_parameters lattice, init
 
 				e[s] = energy_density_cutoff(e_min, e_s);
 
-				u[s].ux = 0.0;		// zero initial velocity
-				u[s].uy = 0.0;
+				u->ux[s] = 0.0;		// zero initial velocity
+				u->uy[s] = 0.0;
 			#ifndef BOOST_INVARIANT
-				u[s].un = 0.0;
+				u->un[s] = 0.0;
 			#endif
 
-				up[s].ux = 0.0;		// also set up = u
-				up[s].uy = 0.0;
+				up->ux[s] = 0.0;		// also set up = u
+				up->uy[s] = 0.0;
 			#ifndef BOOST_INVARIANT
-				up[s].un = 0.0;
+				up->un[s] = 0.0;
 			#endif
 			}
 
