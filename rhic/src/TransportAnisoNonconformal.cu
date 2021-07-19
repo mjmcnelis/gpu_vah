@@ -3,26 +3,28 @@
 #include <iostream>
 #include <math.h>
 #include <cmath>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "../include/Macros.h"
 #include "../include/Hydrodynamics.h"
-#include "../include/TransportAnisoNonconformal.h"
+#include "../include/TransportAnisoNonconformal.cuh"
 #include "../include/TransportAniso.cuh"
 #include "../include/Precision.h"
 
 
-
+__device__
 aniso_transport_coefficients_nonconformal::aniso_transport_coefficients_nonconformal()
 {
 
 }
 
-
+__device__
 aniso_transport_coefficients_nonconformal::~aniso_transport_coefficients_nonconformal()
 {
 
 }
 
-
+__device__
 void aniso_transport_coefficients_nonconformal::compute_hypergeometric_functions_n_equals_0(precision z)
 {
 	if(z > delta)
@@ -60,7 +62,7 @@ void aniso_transport_coefficients_nonconformal::compute_hypergeometric_functions
 	}
 }
 
-
+__device__
 void aniso_transport_coefficients_nonconformal::compute_hypergeometric_functions_n_equals_2(precision z)
 {
 	precision z2 = z  * z;
@@ -104,9 +106,7 @@ void aniso_transport_coefficients_nonconformal::compute_hypergeometric_functions
 	}
 }
 
-
-
-
+__device__
 void aniso_transport_coefficients_nonconformal::compute_hypergeometric_functions_n_equals_4(precision z)
 {
 	precision z2 = z  * z;
@@ -153,7 +153,7 @@ void aniso_transport_coefficients_nonconformal::compute_hypergeometric_functions
 	}
 }
 
-
+__device__
 void aniso_transport_coefficients_nonconformal::compute_transport_coefficients(precision e, precision p, precision pl, precision pt, precision b, precision beq, precision lambda, precision aT, precision aL, precision mbar, precision mass, precision mdmde)
 {
 	// can I cross-check with the conformal case by setting mbar = 0?
