@@ -1,6 +1,6 @@
 
-#ifndef INFERREDVARIABLES_H_
-#define INFERREDVARIABLES_H_
+#ifndef INFERREDVARIABLES_CUH_
+#define INFERREDVARIABLES_CUH_
 
 #include "Precision.h"
 #include "DynamicalVariables.h"

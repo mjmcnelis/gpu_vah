@@ -1,6 +1,6 @@
 
-#ifndef FLUXTERMS_H_
-#define FLUXTERMS_H_
+#ifndef FLUXTERMS_CUH_
+#define FLUXTERMS_CUH_
 
 #include "Precision.h"
 

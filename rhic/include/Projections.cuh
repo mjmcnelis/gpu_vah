@@ -1,5 +1,5 @@
-#ifndef PROJECTIONS_H_
-#define PROJECTIONS_H_
+#ifndef PROJECTIONS_CUH_
+#define PROJECTIONS_CUH_
 
 #include "Precision.h"
 

@@ -15,8 +15,9 @@
 
 using namespace std;
 
+// cuda: removed inline
 __device__
-inline int linear_column_index(int i, int j, int k, int nx, int ny)
+int linear_column_index(int i, int j, int k, int nx, int ny)
 {
 	return i  +  nx * (j  +  ny * k);
 }
@@ -37,7 +38,7 @@ void set_inferred_variables_aniso_hydro(const hydro_variables * const __restrict
 	precision t2 = t * t;
 	precision t4 = t2 * t2;
 
-	// CUDA: same as Regulation.cu
+	// cuda: same as Regulation.cu
 	unsigned int threadID = threadIdx.x  +  blockDim.x * blockIdx.x;
 
 	if(threadID < d_nElements)
@@ -184,7 +185,7 @@ void set_inferred_variables_viscous_hydro(const hydro_variables * const __restri
 	precision e_min = hydro.energy_min;
 	precision t2 = t * t;
 
-	// CUDA: same as Regulation.cu
+	// cuda: same as Regulation.cu
 	unsigned int threadID = threadIdx.x  +  blockDim.x * blockIdx.x;
 
 	if(threadID < d_nElements)

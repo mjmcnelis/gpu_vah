@@ -1,17 +1,21 @@
 
-#ifndef TRANSPORTANISO_H_
-#define TRANSPORTANISO_H_
+#ifndef TRANSPORTANISO_CUH_
+#define TRANSPORTANISO_CUH_
 
 #include "Precision.h"
 #include "Macros.h"
 #include "DynamicalVariables.h"
 #include "Parameters.h"
 
+// cuda: modified on 7/18/21 (put class on device)
+
 // todo: possibly use cubic spline interpolation for the xi data (could be more accurate than a fit)
 // I don't think this is really critical
 
+// cuda: what to do about global?
 const precision delta = 0.01;	// piecewise interval where hypergeometric functions are Taylor expanded
 
+__device__
 class aniso_transport_coefficients
 {
 	// conformal vahydro transport coefficients (nonconformal case will be a separate class)

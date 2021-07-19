@@ -4,16 +4,18 @@
 #include <math.h>
 #include <cmath>
 #include <gsl/gsl_linalg.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "../include/TransportAnisoNonconformal.h"
 #include "../include/TransportAniso.h"
-#include "../include/AnisoVariables.h"
+#include "../include/AnisoVariables.cuh"
 #include "../include/Precision.h"
 #include "../include/Macros.h"
-#include "../include/OpenMP.h"
+// #include "../include/OpenMP.h"
 
 using namespace std;
 
-
+__host__ __device__
 void compute_F(precision Ea, precision PTa, precision PLa, precision mass, precision * X, precision * F)
 {
 	precision lambda = X[0];
@@ -94,7 +96,7 @@ void compute_F(precision Ea, precision PTa, precision PLa, precision mass, preci
 	F[2] = I_220 - PLa;
 }
 
-
+__host__ __device__
 void compute_J(precision Ea, precision PTa, precision PLa, precision mass, precision * X, precision * F, precision ** J)
 {
 	precision lambda = X[0];
@@ -211,9 +213,7 @@ void compute_J(precision Ea, precision PTa, precision PLa, precision mass, preci
     J[0][2] = (Eai + PLai) / aL;	  	J[1][2] = I_421m1 / lambda_aL3;      	J[2][2] = I_440m1 / lambda_aL3;
 }
 
-
-
-
+__host__ __device__
 precision line_backtrack(precision Ea, precision PTa, precision PLa, precision mass, precision * Xcurrent, precision * dX, precision dX_abs, precision g0, precision * F)
 {
 	// This line backtracking algorithm is from the book Numerical Recipes in C
@@ -303,7 +303,7 @@ precision line_backtrack(precision Ea, precision PTa, precision PLa, precision m
 	return l;
 }
 
-
+__host__ __device__
 void free_2D(precision ** M, int n)
 {
 	for(int i = 0; i < n; i++)
@@ -314,7 +314,7 @@ void free_2D(precision ** M, int n)
     free(M);
 }
 
-
+__host__ __device__
 aniso_variables find_anisotropic_variables(precision e, precision pl, precision pt, precision B, precision mass, precision lambda_0, precision aT_0, precision aL_0)
 {
 	precision Ea = e - B;											// kinetic energy density
@@ -466,61 +466,63 @@ aniso_variables find_anisotropic_variables(precision e, precision pl, precision 
 	return variables;
 }
 
-
-inline int linear_column_index(int i, int j, int k, int nx, int ny)
+// cuda: removed inline
+__device__
+int linear_column_index(int i, int j, int k, int nx, int ny)
 {
 	return i  +  nx * (j  +  ny * k);
 }
 
-
+__global__
 void set_anisotropic_variables(const hydro_variables * const __restrict__ q, const precision * const __restrict__ e, precision * const __restrict__ lambda, precision * const __restrict__ aT, precision * const __restrict__ aL, lattice_parameters lattice, hydro_parameters hydro)
 {
+	// cuda: replaced loop and changed q,u variables
+
 #ifdef ANISO_HYDRO
 #ifdef LATTICE_QCD
 	int nx = lattice.lattice_points_x;
 	int ny = lattice.lattice_points_y;
-	int nz = lattice.lattice_points_eta;
+	// int nz = lattice.lattice_points_eta;
 
 	precision conformal_prefactor = hydro.conformal_eos_prefactor;
 
-	#pragma omp parallel for collapse(3)
-	for(int k = 2; k < nz + 2; k++)
+	// cuda: same as Regulation.cu
+	unsigned int threadID = threadIdx.x  +  blockDim.x * blockIdx.x;
+
+	if(threadID < d_nElements)
 	{
-		for(int j = 2; j < ny + 2; j++)
+		unsigned int k = 2  +  (threadID / (d_nx * d_ny));
+		unsigned int j = 2  +  (threadID % (d_nx * d_ny)) / d_nx;
+		unsigned int i = 2  +  (threadID % d_nx);
+
+		unsigned int s = linear_column_index(i, j, k, nx + 4, ny + 4);		
+
+		precision e_s = e[s];
+		precision pl = q->pl[s];
+		precision pt = q->pt[s];
+		precision b = q->b[s];
+
+		equation_of_state_new eos(e_s, conformal_prefactor);
+		precision T = eos.T;
+		precision mass = T * eos.z_quasi();
+
+		precision lambda_prev = lambda[s];
+		precision aT_prev = aT[s];
+		precision aL_prev = aL[s];
+
+		aniso_variables X_s = find_anisotropic_variables(e_s, pl, pt, b, mass, lambda_prev, aT_prev, aL_prev);
+
+		lambda[s] = X_s.lambda;         // update anisotropic variables
+		aT[s] = X_s.aT;
+		aL[s] = X_s.aL;
+
+		if(X_s.did_not_find_solution)
 		{
-			for(int i = 2; i < nx + 2; i++)
-			{
-				int s = linear_column_index(i, j, k, nx + 4, ny + 4);
-
-				precision e_s = e[s];
-				precision pl = q[s].pl;
-				precision pt = q[s].pt;
-				precision b = q[s].b;
-
-				equation_of_state_new eos(e_s, conformal_prefactor);
-				precision T = eos.T;
-				precision mass = T * eos.z_quasi();
-
-				precision lambda_prev = lambda[s];
-				precision aT_prev = aT[s];
-				precision aL_prev = aL[s];
-
-				aniso_variables X_s = find_anisotropic_variables(e_s, pl, pt, b, mass, lambda_prev, aT_prev, aL_prev);
-
-				lambda[s] = X_s.lambda;         // update anisotropic variables
-				aT[s] = X_s.aT;
-				aL[s] = X_s.aL;
-
-				if(X_s.did_not_find_solution)
-				{
-					aniso_regulation[s] = 1;    // track where anisotropic variables were regulated (i.e. used previous solution)
-				}
-				else
-				{
-					aniso_regulation[s] = 0;
-				}
-
-			}
+			aniso_regulation[s] = 1;    // track where anisotropic variables were regulated (i.e. used previous solution)
+		}
+		else
+		{
+			aniso_regulation[s] = 0;
 		}
 	}
 #endif

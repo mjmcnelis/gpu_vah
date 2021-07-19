@@ -1,5 +1,5 @@
-#ifndef VISCOSITIES_H_
-#define VISCOSITIES_H_
+#ifndef VISCOSITIES_CUH_
+#define VISCOSITIES_CUH_
 
 #include "Precision.h"
 #include "Parameters.h"

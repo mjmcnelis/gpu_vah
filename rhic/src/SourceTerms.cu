@@ -1,27 +1,34 @@
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "../include/Macros.h"
 #include "../include/Precision.h"
 #include "../include/DynamicalVariables.h"
 #include "../include/EquationOfState.h"
 #include "../include/TransportAniso.h"
 #include "../include/TransportAnisoNonconformal.h"
-#include "../include/Viscosities.h"
+#include "../include/Viscosities.cuh"
 #include "../include/TransportViscous.h"
-#include "../include/Projections.h"
+#include "../include/Projections.cuh"
 #include "../include/Parameters.h"
 
 
-inline precision central_derivative(const precision * const __restrict__ f, int n, precision dx)
+// cuda: modified on 7/18/21 (set functions to device)
+
+// cuda: removed inline
+__device__
+precision central_derivative(const precision * const __restrict__ f, int n, precision dx)
 {
 	return (f[n + 1] - f[n]) / (2. * dx);		// f[n] = fm  |	 f[n+1] = fp
 }
 
-
+__device__
 void source_terms_aniso_hydro(precision * const __restrict__ S, const precision * const __restrict__ q, precision e_s, precision lambda_s, precision aT_s, precision aL_s, precision t, const precision * const __restrict__ qi1, const precision * const __restrict__ qj1, const precision * const __restrict__ qk1, const precision * const __restrict__ e1, const precision * const __restrict__ ui1, const precision * const __restrict__ uj1, const precision * const __restrict__ uk1, precision ux, precision uy, precision un, precision ux_p, precision uy_p, precision un_p, precision dt_prev, precision dx, precision dy, precision dn, hydro_parameters hydro)
 {
-	int taubulk_regulated = 0;
+	int taubulk_regulated = 0;		// not using anymore 
+
 #ifdef ANISO_HYDRO
 
 // useful expressions
@@ -100,18 +107,10 @@ void source_terms_aniso_hydro(precision * const __restrict__ S, const precision 
 	precision pl  = q[a];	a++;
 	precision pt  = q[a];	a++;
 
-
-
-
-
 // Debug 1: should I remove this? it messes with the pt regulation
 #ifdef CONFORMAL_EOS
 	pt  = (e_s - pl) / 2.;						// I don't think I need this (because it's already regulated to conformal formula)
 #endif
-
-
-
-
 
 	precision pavg = (pl + 2.*pt) / 3.;			// average pressure
 
@@ -946,7 +945,7 @@ precision lambda_piTW = 0;
 }
 
 
-
+__device__
 void source_terms_viscous_hydro(precision * const __restrict__ S, const precision * const __restrict__ q, precision e, precision t, const precision * const __restrict__ qi1, const precision * const __restrict__ qj1, const precision * const __restrict__ qk1, const precision * const __restrict__ e1, const precision * const __restrict__ ui1, const precision * const __restrict__ uj1, const precision * const __restrict__ uk1, precision ux, precision uy, precision un, precision ux_p, precision uy_p, precision un_p, precision dt_prev, precision dx, precision dy, precision dn, hydro_parameters hydro)
 {
 #ifndef ANISO_HYDRO

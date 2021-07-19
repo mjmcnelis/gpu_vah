@@ -1,6 +1,6 @@
 
-#ifndef REGULATION_H_
-#define REGULATION_H_
+#ifndef REGULATION_CUH_
+#define REGULATION_CUH_
 
 #include "Precision.h"
 #include "DynamicalVariables.h"

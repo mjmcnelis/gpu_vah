@@ -1,13 +1,18 @@
 
-#ifndef EQUATIONOFSTATE_H_
-#define EQUATIONOFSTATE_H_
+#ifndef EQUATIONOFSTATE_CUH_
+#define EQUATIONOFSTATE_CUH_
 
 #include "Precision.h"
 
+// cuda: functions are host + device
+
+__host__ __device__
 precision energy_density_cutoff(precision e_min, precision e);
 
+__host__ __device__
 precision equilibrium_energy_density_new(precision T, precision conformal_prefactor);
 
+__host__ __device__
 class equation_of_state_new
 {
 	private:

@@ -3,31 +3,36 @@
 #include <iostream>
 #include <math.h>
 #include <cmath>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "../include/Macros.h"
 #include "../include/Hydrodynamics.h"
-#include "../include/TransportAniso.h"
+#include "../include/TransportAniso.cuh"
 #include "../include/DynamicalVariables.h"
-#include "../include/EquationOfState.h"
+#include "../include/EquationOfState.cuh"
 #include "../include/Precision.h"
 #include "../include/Parameters.h"
+
+// cuda: put functions on device
+
 
 double de_error = 1.e-7;
 double dpl_error = 1.e-7;
 double dpt_error = 1.e-7;
 
-
+__device__
 aniso_transport_coefficients::aniso_transport_coefficients()
 {
 
 }
 
-
+__device__
 aniso_transport_coefficients::~aniso_transport_coefficients()
 {
 
 }
 
-
+__device__
 void aniso_transport_coefficients::test_kinetic_solution(precision e, precision pl, precision pt, precision aL2, precision prefactor)
 {
 	precision e_a  = prefactor * t_200 * aL2;
@@ -48,7 +53,7 @@ void aniso_transport_coefficients::test_kinetic_solution(precision e, precision 
 	}
 }
 
-
+__device__
 void aniso_transport_coefficients::compute_hypergeometric_functions(precision z)
 {
 	precision z2 = z  * z;
@@ -131,7 +136,7 @@ void aniso_transport_coefficients::compute_hypergeometric_functions(precision z)
 	}
 }
 
-
+__device__
 void aniso_transport_coefficients::compute_transport_coefficients(precision e, precision pl, precision pt, precision conformal_eos_prefactor)
 {
 #ifdef CONFORMAL_EOS

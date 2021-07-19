@@ -2,11 +2,17 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "../include/Macros.h"
 #include "../include/Precision.h"
-#include "../include/EquationOfState.h"
+#include "../include/EquationOfState.cuh"
 #include "../include/LatticeData.h"
 
+// cuda: modified on 7/18/21 (host, device)
+
+
+__host__ __device__
 precision energy_density_cutoff(precision e_min, precision e)
 {
 	precision e_cut = fmax(0., e);
@@ -16,7 +22,9 @@ precision energy_density_cutoff(precision e_min, precision e)
 	//return fmax(e_min, e);						// hard cutoff
 }
 
-inline precision pressure_cutoff(precision p_min, precision p)
+// cuda: I think it's device only, removed inline
+__device__
+precision pressure_cutoff(precision p_min, precision p)
 {
 	precision p_cut = fmax(0., p);
 
@@ -25,7 +33,7 @@ inline precision pressure_cutoff(precision p_min, precision p)
 	//return fmax(p_min, p);						// hard cutoff
 }
 
-
+__host__ __device__
 equation_of_state_new::equation_of_state_new(precision e1_in, precision conformal_prefactor_in)
 {
 	// constructor computes the temperature T
@@ -97,13 +105,13 @@ equation_of_state_new::equation_of_state_new(precision e1_in, precision conforma
 	T22 = T21 * T1;
 }
 
-
+__host__ __device__
 equation_of_state_new::~equation_of_state_new()
 {
 
 }
 
-
+__host__ __device__
 precision equation_of_state_new::equilibrium_pressure()
 {
 	precision p;
@@ -147,7 +155,7 @@ precision equation_of_state_new::equilibrium_pressure()
 	return p;
 }
 
-
+__host__ __device__
 precision equation_of_state_new::speed_of_sound_squared()
 {
 	precision cs2;
@@ -161,7 +169,7 @@ precision equation_of_state_new::speed_of_sound_squared()
 	return cs2;
 }
 
-
+__host__ __device__
 precision equation_of_state_new::z_quasi()
 {
 	precision z;
@@ -182,7 +190,7 @@ precision equation_of_state_new::z_quasi()
 	return z;
 }
 
-
+__host__ __device__
 precision equation_of_state_new::mdmde_quasi()
 {
 	precision mdmde;
@@ -196,7 +204,7 @@ precision equation_of_state_new::mdmde_quasi()
 	return mdmde;
 }
 
-
+__host__ __device__
 precision equation_of_state_new::equilibrium_mean_field()
 {
 	precision Beq;
@@ -210,7 +218,7 @@ precision equation_of_state_new::equilibrium_mean_field()
 	return Beq;
 }
 
-
+__host__ __device__
 precision equation_of_state_new::beta_shear()
 {
 	precision beta_shear;
@@ -224,7 +232,7 @@ precision equation_of_state_new::beta_shear()
 	return beta_shear;
 }
 
-
+__host__ __device__
 precision equation_of_state_new::beta_bulk()
 {
 	precision beta_bulk;
@@ -241,6 +249,7 @@ precision equation_of_state_new::beta_bulk()
 
 
 // This is the HOTQCD + SMASH version
+__host__ __device__
 precision equilibrium_energy_density_new(precision T, precision conformal_prefactor)
 {
 	precision e;
