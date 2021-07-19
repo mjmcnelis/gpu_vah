@@ -4,16 +4,17 @@
 #include "../include/Parameters.h"
 #include "../include/Precision.h"
 #include "../include/Macros.h"
-#include "../include/EquationOfState.h"
+#include "../include/EquationOfState.cuh"
 #include "../include/DynamicalVariables.h"
-#include "../include/Projections.h"
+#include "../include/Projections.cuh"				// made functions host + device
 #include "../include/NeighborCells.h"
 #include "../include/Hydrodynamics.h"
 // #include "../include/AnisoBjorken.h"
 // #include "../include/ViscousBjorken.h"
 // #include "../include/AnisoGubser.h"
 // #include "../include/ViscousGubser.h"
-#include "../include/Viscosities.h"
+
+// #include "../include/Viscosities.h"			// temp (if uncomment mean field function, then need to make functions host + device)
 
 // cuda: modified on 7/18/21 (commented everything not related to 3+1d Trento test)
 

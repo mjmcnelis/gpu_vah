@@ -1,11 +1,16 @@
 #include <stdlib.h>
 #include <fstream>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "../include/Macros.h"
-#include "../include/EquationOfState.h"
-#include "../include/TransportViscous.h"
+#include "../include/EquationOfState.cuh"
+#include "../include/TransportViscous.cuh"
 #include "../include/Precision.h"
 #include "../include/Parameters.h"
 
+// cuda: set functions to device
+
+__device__
 viscous_transport_coefficients::viscous_transport_coefficients(double T_in, double e_in, double p_in, int kinetic_theory_model_in)
 {
 	T = T_in;
@@ -37,13 +42,13 @@ viscous_transport_coefficients::viscous_transport_coefficients(double T_in, doub
 	T22 = T21 * T;
 }
 
-
+__device__
 viscous_transport_coefficients::~viscous_transport_coefficients()
 {
 
 }
 
-
+__device__
 void viscous_transport_coefficients::compute_shear_transport_coefficients(precision etas)
 {
 	if(kinetic_theory_model == 0)				// small fixed m/T << 1
@@ -81,7 +86,7 @@ void viscous_transport_coefficients::compute_shear_transport_coefficients(precis
 	}
 }
 
-
+__device__
 void viscous_transport_coefficients::compute_bulk_transport_coefficients(precision zetas, precision third_cs2)
 {
 	if(kinetic_theory_model == 0)				// small fixed m/T << 1

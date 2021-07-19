@@ -14,11 +14,10 @@
 // #include "../include/IdealGubser.h"
 // #include "../include/ViscousGubser.h"
 // #include "../include/AnisoGubser.h"
-#include "../include/EquationOfState.h"
+#include "../include/EquationOfState.cuh"
 #include "../include/Projections.h"
-#include "../include/AnisoVariables.h"
-#include "../include/Viscosities.h"
-#include "../include/OpenMP.h"
+#include "../include/AnisoVariables.cuh"
+#include "../include/Viscosities.cuh"
 
 // cuda: modified on 7/18/21 (removed Bjorken and Gubser tests, fixed q,u variables)
 

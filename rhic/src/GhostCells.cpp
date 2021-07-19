@@ -1,6 +1,6 @@
 #include "../include/Precision.h"
 #include "../include/DynamicalVariables.h"
-#include "../include/OpenMP.h"
+// #include "../include/OpenMP.h"
 
 inline int linear_column_index(int i, int j, int k, int nx, int ny)
 {

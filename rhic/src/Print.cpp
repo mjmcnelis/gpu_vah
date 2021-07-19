@@ -9,7 +9,6 @@
 #include "../include/DynamicalVariables.h"
 #include "../include/Parameters.h"
 #include "../include/Print.h"
-#include "../include/OpenMP.h"
 using namespace std;
 
 

@@ -6,7 +6,7 @@
 #include "../include/Macros.h"
 #include "../include/Hydrodynamics.h"
 #include "../include/TransportAnisoNonconformal.h"
-#include "../include/TransportAniso.h"
+#include "../include/TransportAniso.cuh"
 #include "../include/Precision.h"
 
 

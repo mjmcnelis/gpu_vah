@@ -6,11 +6,12 @@
 #include <cuda_runtime.h>
 #include "../include/Macros.h"
 #include "../include/DynamicalVariables.h"
-#include "../include/InferredVariables.h"
+// #include "../include/InferredVariables.cuh"		// 7/19/21: do I need this still?
 #include "../include/Projections.h"
-#include "../include/OpenMP.h"
 
-// CUDA: got rid of sqrt_two, sqrt_three, inline for these two functions
+
+// cuda: got rid of sqrt_two, sqrt_three, inline for these two functions
+
 __device__ 
 int linear_column_index(int i, int j, int k, int nx, int ny)
 {
@@ -42,20 +43,20 @@ void regulate_residual_currents(precision t, hydro_variables * const __restrict_
 	int pt_reg_conformal = 0;
 	int b_reg = 0;
 
-	// CUDA: need to review this
+	// cuda: need to review this
 	unsigned int threadID = threadIdx.x  +  blockDim.x * blockIdx.x;
 
-	// CUDA: do I need to define d_nElements?
+	// cuda: do I need to define d_nElements?
 	if(threadID < d_nElements)
 	{
-		// CUDA: what does this mean exactly? do I really need d_ncx, d_ncy? is unsigned int necessary?
+		// cuda: what does this mean exactly? do I really need d_ncx, d_ncy? is unsigned int necessary?
 		unsigned int k = 2  +  (threadID / (d_nx * d_ny));
 		unsigned int j = 2  +  (threadID % (d_nx * d_ny)) / d_nx;
 		unsigned int i = 2  +  (threadID % d_nx);
  
 		unsigned int s = linear_column_index(i, j, k, nx + 4, ny + 4);
 
-		// CUDA: can I use q.pl[s] or no?
+		// cuda: can I use q.pl[s] or no?
 		precision e_s = e[s];
 		precision pl  = q->pl[s];
 		precision pt  = q->pt[s];
@@ -254,7 +255,7 @@ void regulate_viscous_currents(precision t, hydro_variables * const __restrict__
 #ifndef ANISO_HYDRO
 #if (NUMBER_OF_VISCOUS_CURRENTS != 0)
 
-	// CUDA: is passing these parameters okay? do I need to cuda configure d_ncx, d_nx, etc directly?
+	// cuda: is passing these parameters okay? do I need to cuda configure d_ncx, d_nx, etc directly?
 	int nx = lattice.lattice_points_x;
 	int ny = lattice.lattice_points_y;
 	// int nz = lattice.lattice_points_eta;
@@ -262,26 +263,26 @@ void regulate_viscous_currents(precision t, hydro_variables * const __restrict__
 	precision t2 = t * t;
 	precision t4 = t2 * t2;
 
-	// CUDA: need to review this
+	// cuda: need to review this
 	unsigned int threadID = threadIdx.x  +  blockDim.x * blockIdx.x;
 
-	// CUDA: do I need to define d_nElements? (d_ stands for device)
+	// cuda: do I need to define d_nElements? (d_ stands for device)
 	if(threadID < d_nElements)
 	{
-		// CUDA: what does this mean exactly? do I really need d_ncx, d_ncy?
-		// CUDA: is the linear column indexing the same as GPU-VH? or did I change this, too?
+		// cuda: what does this mean exactly? do I really need d_ncx, d_ncy?
+		// cuda: is the linear column indexing the same as GPU-VH? or did I change this, too?
 		unsigned int k = 2  +  (threadID / (d_nx * d_ny));
 		unsigned int j = 2  +  (threadID % (d_nx * d_ny)) / d_nx;
 		unsigned int i = 2  +  (threadID % d_nx);
 
-		// CUDA: do I need d_nx, d_ny?
+		// cuda: do I need d_nx, d_ny?
 		unsigned int s = linear_column_index(i, j, k, nx + 4, ny + 4);
 
-		// CUDA: should eos class/functions be device or device+host?
+		// cuda: should eos class/functions be device or device+host?
 		equation_of_state_new eos(e[s], hydro.conformal_eos_prefactor);		
 		precision p = eos.equilibrium_pressure();
 
-		// CUDA data structure of fluid and hydro structs need to change to u->ux[s], etc
+		// cuda data structure of fluid and hydro structs need to change to u->ux[s], etc
 		precision ux = u->ux[s];
 		precision uy = u->uy[s];
 
@@ -344,7 +345,7 @@ void regulate_viscous_currents(precision t, hydro_variables * const __restrict__
 			viscous_regulation[s] = 0;
 		}
 	#endif
-		// CUDA: got rid of switch (only using one regulation method)
+		// cuda: got rid of switch (only using one regulation method)
 		precision Tvisc = sqrt(fabs(3. * Pi * Pi  + pitt * pitt  +  pixx * pixx  +  piyy * piyy  +  t4 * pinn * pinn  -  2. * (pitx * pitx  +  pity * pity  -  pixy * pixy  +  t2 * (pitn * pitn  -  pixn * pixn  -  piyn * piyn))));
 
 		precision factor = fabs(Teq / (1.e-10 + Tvisc));

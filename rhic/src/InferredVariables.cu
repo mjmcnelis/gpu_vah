@@ -10,8 +10,7 @@
 #include "../include/Hydrodynamics.h"
 #include "../include/DynamicalVariables.h"
 #include "../include/Parameters.h"
-#include "../include/EquationOfState.h"
-#include "../include/OpenMP.h"
+#include "../include/EquationOfState.cuh"
 
 using namespace std;
 

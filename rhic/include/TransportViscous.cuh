@@ -1,11 +1,14 @@
 
-#ifndef TRANSPORTVISCOUS_H_
-#define TRANSPORTVISCOUS_H_
+#ifndef TRANSPORTVISCOUS_CUH_
+#define TRANSPORTVISCOUS_CUH_
 
 #include "Precision.h"
 #include "Macros.h"
 #include "Parameters.h"
 
+// cuda: make class device
+
+__device__
 class viscous_transport_coefficients
 {
 	private:
